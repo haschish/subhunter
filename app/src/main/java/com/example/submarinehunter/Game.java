@@ -34,25 +34,24 @@ public class Game extends SurfaceView implements Runnable {
     private int containerHeight;
     private float screenDensity;
 
-    float blockSize;
-    float blockWidth;
-    float blockHeight;
-    float fontSize;
-    float marginSize;
-    int gridWidth;
-    int gridHeight;
-    int horizontalTouched;
-    int verticalTouched;
-    int subHorizontalPosition;
-    int subVerticalPosition;
-    boolean isHit = false;
-    Animation bounceAnim;
-    ArrayList<int[]> shots;
-    int distanceFromSub;
-    boolean isBoom;
+    private float blockSize;
+    private float blockWidth;
+    private float blockHeight;
+    private float fontSize;
+    private int gridWidth;
+    private int gridHeight;
+    private int horizontalTouched;
+    private int verticalTouched;
+    private int subHorizontalPosition;
+    private int subVerticalPosition;
+    private boolean isHit = false;
+//    private Animation bounceAnim;
+    private ArrayList<int[]> shots;
+    private int distanceFromSub;
+    private boolean isBoom;
 
-    Bitmap blankBitmap;
-    Bitmap seabedBitmap;
+    private DB db;
+
 
     public Game(Context context) {
         super(context);
@@ -60,6 +59,8 @@ public class Game extends SurfaceView implements Runnable {
 
     public Game(Context context, int width, int height, float destiny) {
         super(context);
+
+        db = new DB(context);
 
         containerWidth = width;
         containerHeight = height;
@@ -75,7 +76,7 @@ public class Game extends SurfaceView implements Runnable {
         blockWidth = containerWidth / gridWidth;
         blockHeight = containerHeight / gridHeight;
 
-//        paint = new Paint(Paint.FILTER_BITMAP_FLAG);
+        paint = new Paint();
         shots = new ArrayList<>();
         initGame();
     }
@@ -92,24 +93,26 @@ public class Game extends SurfaceView implements Runnable {
         paint.setColor(Color.WHITE);
         paint.setStrokeWidth(screenDensity);
         for (int i = 1; i <= gridWidth; i++) {
-            canvas.drawLine(blockSize * i, 0, blockSize * i, containerHeight, paint);
+            canvas.drawLine(blockWidth * i, 0, blockWidth * i, containerHeight, paint);
         }
 
         for (int i = 1; i <= gridHeight; i++) {
-            canvas.drawLine(0, blockSize * i, containerWidth, blockSize * i, paint);
+            canvas.drawLine(0, blockHeight * i, containerWidth, blockHeight * i, paint);
         }
 
         for (int[] shot : shots) {
-            float left = (shot[0] - 1) * blockSize;
-            float top = (shot[1] - 1) * blockSize;
+            float left = (shot[0] - 1) * blockWidth;
+            float top = (shot[1] - 1) * blockHeight;
 
             paint.setColor(Color.WHITE);
-            canvas.drawRect(left, top, left + blockSize, top + blockSize, paint);
+            canvas.drawRect(left, top, left + blockWidth, top + blockHeight, paint);
 
             paint.setColor(Color.BLACK);
             paint.setTextSize(fontSize);
             paint.setFakeBoldText(true);
-            canvas.drawText("" + shot[2], left + marginSize, top + fontSize + marginSize, paint);
+            String text = "" + shot[2];
+            float textWidth = paint.measureText(text);
+            canvas.drawText(text, left + (blockWidth - textWidth) / 2, top + blockHeight - (blockHeight - fontSize) / 2, paint);
         }
     }
 
@@ -163,8 +166,8 @@ public class Game extends SurfaceView implements Runnable {
 
     private void onHit(float touchX, float touchY) {
 //        gameView.startAnimation(bounceAnim);
-        horizontalTouched = (int) (touchX / blockSize + 1);
-        verticalTouched = (int) (touchY / blockSize + 1);
+        horizontalTouched = (int) (touchX / blockWidth + 1);
+        verticalTouched = (int) (touchY / blockHeight + 1);
 
         isHit = horizontalTouched == subHorizontalPosition && verticalTouched == subVerticalPosition;
 
@@ -178,16 +181,15 @@ public class Game extends SurfaceView implements Runnable {
             distanceFromSub = Math.max(horizontalGap, verticalGap);
             int[] shot = new int[]{horizontalTouched, verticalTouched, distanceFromSub};
             shots.add(shot);
-//            drawGrid();
-
-            Log.d("test", "horGap: " + horizontalGap + ", verGap: " + verticalGap);
-            Log.d("test", "distanceFromSub: " + distanceFromSub);
-            Log.d("test", "touchPosition: " + horizontalTouched + ", " + verticalTouched);
-            Log.d("test", "subPosition: " + subHorizontalPosition + ", " + subVerticalPosition);
+//            Log.d("test", "horGap: " + horizontalGap + ", verGap: " + verticalGap);
+//            Log.d("test", "distanceFromSub: " + distanceFromSub);
+//            Log.d("test", "touchPosition: " + horizontalTouched + ", " + verticalTouched);
+//            Log.d("test", "subPosition: " + subHorizontalPosition + ", " + subVerticalPosition);
         }
     }
 
     private void boom() {
+        db.insert(shots.size());
         Navigation.findNavController(this).navigate(R.id.gameToEnd);
     }
 }

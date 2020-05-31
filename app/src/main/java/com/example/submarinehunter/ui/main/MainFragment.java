@@ -13,10 +13,11 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.TextView;
 
 import com.example.submarinehunter.R;
 
-public class MainFragment extends Fragment implements View.OnTouchListener {
+public class MainFragment extends Fragment implements View.OnClickListener {
 
     private MainViewModel mViewModel;
 
@@ -28,7 +29,10 @@ public class MainFragment extends Fragment implements View.OnTouchListener {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.main_fragment, container, false);
-        view.setOnTouchListener(this);
+        TextView start = view.findViewById(R.id.txt_start);
+        TextView records = view.findViewById(R.id.txt_records);
+        start.setOnClickListener(this);
+        records.setOnClickListener(this);
         return view;
     }
 
@@ -40,10 +44,14 @@ public class MainFragment extends Fragment implements View.OnTouchListener {
     }
 
     @Override
-    public boolean onTouch(View v, MotionEvent event) {
-        if ((event.getAction() & MotionEvent.ACTION_MASK) == MotionEvent.ACTION_DOWN) {
-            Navigation.findNavController(v).navigate(R.id.mainToGame);
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.txt_start:
+                Navigation.findNavController(v).navigate(R.id.mainToGame);
+                break;
+            case R.id.txt_records:
+                Navigation.findNavController(v).navigate(R.id.mainToEnd);
+                break;
         }
-        return true;
     }
 }
