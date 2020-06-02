@@ -26,6 +26,7 @@ public class Game extends SurfaceView implements Runnable {
     private SurfaceHolder holder;
     private Canvas canvas;
     private Paint paint;
+    private Paint paintWinText;
 
     private final long MS_IN_SECOND = 1000;
     private long fps;
@@ -70,13 +71,19 @@ public class Game extends SurfaceView implements Runnable {
         blockSize = 40 * screenDensity;
         fontSize = 20 * screenDensity;
 
-        gridWidth = (int) (containerWidth / blockSize);
-        gridHeight = (int) (containerHeight / blockSize);
+        gridWidth = containerWidth / (int) blockSize;
+        gridHeight = containerHeight / (int) blockSize;
 
-        blockWidth = containerWidth / gridWidth;
-        blockHeight = containerHeight / gridHeight;
+        blockWidth = containerWidth / (float)gridWidth;
+        blockHeight = containerHeight / (float)gridHeight;
+
+        Log.d("blockWidth", containerWidth + " : " + gridWidth + " : " + blockWidth);
 
         paint = new Paint();
+        paintWinText = new Paint();
+        paintWinText.setTextSize(fontSize * 2);
+        paintWinText.setColor(Color.WHITE);
+
         shots = new ArrayList<>();
         initGame();
     }
@@ -92,11 +99,11 @@ public class Game extends SurfaceView implements Runnable {
     private void drawGrid() {
         paint.setColor(Color.WHITE);
         paint.setStrokeWidth(screenDensity);
-        for (int i = 1; i <= gridWidth; i++) {
+        for (int i = 1; i < gridWidth; i++) {
             canvas.drawLine(blockWidth * i, 0, blockWidth * i, containerHeight, paint);
         }
 
-        for (int i = 1; i <= gridHeight; i++) {
+        for (int i = 1; i < gridHeight; i++) {
             canvas.drawLine(0, blockHeight * i, containerWidth, blockHeight * i, paint);
         }
 
@@ -121,7 +128,19 @@ public class Game extends SurfaceView implements Runnable {
             canvas = holder.lockCanvas();
 
             canvas.drawColor(0, PorterDuff.Mode.CLEAR);
-            drawGrid();
+            if (isBoom) {
+                String line1 = "You have won";
+                String line2 = "Your result is " + shots.size();
+                float startY = containerHeight / 2;
+
+                float widthLine1 = paintWinText.measureText(line1);
+                canvas.drawText(line1, (containerWidth - widthLine1) / 2, startY, paintWinText);
+
+                float widthLine2 = paintWinText.measureText(line2);
+                canvas.drawText(line2, (containerWidth - widthLine2) / 2, startY + paintWinText.getTextSize() * 1.5f, paintWinText );
+            } else {
+                drawGrid();
+            }
 
             holder.unlockCanvasAndPost(canvas);
         }
@@ -159,9 +178,17 @@ public class Game extends SurfaceView implements Runnable {
     @Override
     public boolean onTouchEvent(MotionEvent event) {
         if ((event.getAction() & MotionEvent.ACTION_MASK) == MotionEvent.ACTION_UP) {
-            onHit(event.getX(), event.getY());
+            if (isBoom) {
+                showResults();
+            } else {
+                onHit(event.getX(), event.getY());
+            }
         }
         return true;
+    }
+
+    private void showResults() {
+        Navigation.findNavController(this).navigate(R.id.gameToEnd);
     }
 
     private void onHit(float touchX, float touchY) {
@@ -189,7 +216,7 @@ public class Game extends SurfaceView implements Runnable {
     }
 
     private void boom() {
+        isBoom = true;
         db.insert(shots.size());
-        Navigation.findNavController(this).navigate(R.id.gameToEnd);
     }
 }
